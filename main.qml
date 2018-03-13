@@ -1,6 +1,7 @@
 import QtQuick 2.10
 import QtQuick.Controls 2.3
 import QtQuick.Controls.Material 2.3
+import QtQuick.Controls.Universal 2.2
 import QtQuick.Layouts 1.3
 import QtQuick.Extras 1.4
 import MqttClient 1.0
@@ -12,6 +13,8 @@ ApplicationWindow {
     height: 480
     width: 720
 
+    Universal.theme: Universal.Dark
+    Universal.accent: Universal.Cyan
     Material.theme: Material.Dark
     Material.accent: Material.Blue
 

@@ -2,7 +2,6 @@
 
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
-#include <QQuickStyle>
 #include <mosquittopp.h>
 
 int main(int argc, char* argv[])
@@ -11,8 +10,6 @@ int main(int argc, char* argv[])
     QGuiApplication app(argc, argv);
 
     mosqpp::lib_init();
-
-    QQuickStyle::setStyle("Material");
 
     qmlRegisterType<QmlMqttClient>("MqttClient", 1, 0, "MqttClient");
 
