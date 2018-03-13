@@ -18,6 +18,7 @@ add_subdirectory(mosquitto)
 # Instruct CMake to run moc automatically when needed.
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOUIC ON)
 
 # Find the Qt libraries
 if(WIN32)
@@ -61,7 +62,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 
 target_sources(${PROJECT_NAME} PRIVATE
     qmlmqttclient.cpp
-    main.qml
+    qml.qrc
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE mosquitto/lib)
