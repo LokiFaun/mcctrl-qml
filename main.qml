@@ -18,6 +18,16 @@ ApplicationWindow {
     Material.theme: Material.Dark
     Material.accent: Material.Blue
 
+    Item {
+        id: fontello
+        property string menu: qsTr("\uf0c9")
+        property string close: qsTr("\ue800")
+        property string home: qsTr("\ue801")
+        property string lightbulb: qsTr("\uf0eb")
+        property string desktop: qsTr("\uf108")
+        property string thermometer: qsTr("\uf2c8")
+    }
+
     MqttClient {
         id: client
     }
@@ -35,7 +45,9 @@ ApplicationWindow {
             anchors.fill: parent
             ToolButton {
                 id: toolbarMenuButton
-                text: qsTr("<")
+                font.family: "mcctrl"
+                font.pixelSize: 20
+                text: fontello.menu
 
                 property bool toolbarActive: false
                 function closeToolbar() {
@@ -44,14 +56,12 @@ ApplicationWindow {
                     }
 
                     mainStack.pop()
-                    toolbarMenuButton.text = qsTr("<")
                     toolbarMenuButton.toolbarActive = false
                 }
 
                 onClicked: {
                     if (!toolbarActive) {
                         mainStack.push(toolbarMenu)
-                        toolbarMenuButton.text = qsTr("_")
                         toolbarMenuButton.toolbarActive = true
                     } else {
                         toolbarMenuButton.closeToolbar()
@@ -68,12 +78,16 @@ ApplicationWindow {
             ToolButton {
                 id: closeButton
                 anchors.right: parent.right
-                text: qsTr("Q")
+                font.family: "mcctrl"
+                font.pixelSize: 30
+                text: fontello.close
                 onClicked: applicationWindow.close()
             }
             ToolButton {
                 anchors.right: closeButton.left
-                text: qsTr("H")
+                font.family: "mcctrl"
+                font.pixelSize: 20
+                text: fontello.home
                 onClicked: {
                     toolbarMenuButton.closeToolbar()
                     mainStack.push(mainView)

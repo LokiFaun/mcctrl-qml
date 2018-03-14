@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file>main.qml</file>
+        <file>fontello/font/mcctrl.ttf</file>
     </qresource>
 </RCC>
