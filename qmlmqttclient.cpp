@@ -21,9 +21,29 @@ QmlMqttClient::~QmlMqttClient()
     QThread::wait();
 }
 
-void QmlMqttClient::connectToHost()
+void QmlMqttClient::connect()
 {
     mosqpp::mosquittopp::connect(m_Host.toStdString().c_str(), m_Port);
+}
+
+void QmlMqttClient::subscribe(const QString& topic)
+{
+    std::string const tp = topic.toStdString();
+    mosqpp::mosquittopp::subscribe(nullptr, tp.c_str());
+}
+
+void QmlMqttClient::publish(const QString& topic, const QString& msg)
+{
+    qDebug() << "Publishing: " << topic << " - " << msg;
+    std::string const tp = topic.toStdString();
+    std::string const pld = msg.toStdString();
+    char buf[6];
+    memset(buf, 0, 6 * sizeof(char));
+    memcpy(buf, pld.c_str(), msg.length());
+    mosqpp::mosquittopp::publish(nullptr,
+        tp.c_str(),
+        msg.length(),
+        buf);
 }
 
 int QmlMqttClient::port() const
@@ -40,7 +60,7 @@ void QmlMqttClient::setPort(int const port)
             mosqpp::mosquittopp::disconnect();
         }
 
-        mosqpp::mosquittopp::connect("test.mosquitto.org", m_Port);
+        mosqpp::mosquittopp::connect(m_Host.toStdString().c_str(), m_Port);
     }
 
     m_Port = port;
@@ -85,7 +105,6 @@ void QmlMqttClient::on_connect(int const rc)
 {
     if (rc == 0) {
         setIsConnected(true);
-        mosqpp::mosquittopp::subscribe(nullptr, "mcctrl/temperature");
     }
 }
 void QmlMqttClient::on_disconnect(int rc)

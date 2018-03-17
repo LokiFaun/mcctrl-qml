@@ -20,20 +20,35 @@ ApplicationWindow {
 
     Item {
         id: fontello
-        property string menu: qsTr("\uf0c9")
-        property string close: qsTr("\ue800")
-        property string home: qsTr("\ue801")
-        property string lightbulb: qsTr("\uf0eb")
-        property string desktop: qsTr("\uf108")
-        property string thermometer: qsTr("\uf2c8")
+        readonly property string menu: qsTr("\uf0c9")
+        readonly property string close: qsTr("\ue800")
+        readonly property string home: qsTr("\ue801")
+        readonly property string lightbulb: qsTr("\uf0eb")
+        readonly property string desktop: qsTr("\uf108")
+        readonly property string thermometer: qsTr("\uf2c8")
     }
 
     MqttClient {
         id: client
     }
 
+    function onMessage(topic, payload) {
+        console.log("RECEIVED: " + topic);
+        console.log("PAYLOAD" + payload);
+        if (topic === 'mcctrl/lights/on') {
+            console.log("Setting hueState");
+            hueButton.hueState = payload === 'True';
+        }
+    }
+
+    function onMqttConnected(isConnected) {
+        console.log("MQTT connected");
+    }
+
     Component.onCompleted: {
-        client.connectToHost()
+        client.connect()
+        client.onMessage.connect(onMessage)
+        client.onConnect.connect(onMqttConnected)
     }
 
     header: ToolBar {
@@ -156,6 +171,23 @@ ApplicationWindow {
                 Layout.column: 0
                 Layout.columnSpan: 2
                 text: qsTr("Hue")
+                id: hueButton
+                property bool hueState: false
+                Component.onCompleted: {
+                    console.log("Subscribe to hue-lights");
+                    client.subscribe("mcctrl/lights/on");
+                }
+
+                onClicked: {
+                    if (hueButton.hueState === true) {
+                        client.publish("mcctrl/cmd/lights/on", "False")
+                        hueButton.hueState = false;
+                    } else {
+                        client.publish("mcctrl/cmd/lights/on", "True")
+                        hueButton.hueState = true;
+                    }
+                }
+
             }
             Button {
                 Layout.fillHeight: true

@@ -19,7 +19,9 @@ public:
     explicit QmlMqttClient(QObject* parent = nullptr);
     virtual ~QmlMqttClient();
 
-    Q_INVOKABLE void connectToHost();
+    Q_INVOKABLE void connect();
+    Q_INVOKABLE void subscribe(QString const& topic);
+    Q_INVOKABLE void publish(QString const& topic, QString const& msg);
 
     bool isConnected() const;
     void setIsConnected(bool isConnected);
