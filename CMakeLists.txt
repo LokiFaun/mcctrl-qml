@@ -1,4 +1,12 @@
 cmake_minimum_required(VERSION 3.8)
+
+if(WIN32)
+string(REGEX REPLACE "/W[0-4]" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+string(REGEX REPLACE "/W[0-4]" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
+message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_C_FLAGS}")
+endif()
+
 project(mcctrl)
 
 # Find includes in corresponding build directories
@@ -7,10 +15,15 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 ################################################################################
 # Mosquitto Mqtt library
 ################################################################################
-set(WITH_SRV OFF)
-set(WITH_TLS OFF)
-set(WITH_THREADING OFF)
+set(WITH_SRV OFF CACHE STRING "Disable server")
+set(WITH_TLS OFF CACHE STRING "Disable TLS")
+set(WITH_THREADING OFF CACHE STRING "Disable threading")
+set(WITH_LIB_ONLY ON STRING "Build only lib")
 add_subdirectory(mosquitto)
+if(WIN32)
+target_compile_options(libmosquitto PRIVATE "/W0")
+target_compile_options(mosquittopp PRIVATE "/W0")
+endif()
 
 ################################################################################
 # Qt
@@ -51,14 +64,16 @@ if(Qt5_FOUND AND WIN32 AND TARGET Qt5::qmake AND NOT TARGET Qt5::windeployqt)
 endif()
 
 ################################################################################
-# McCtrol Project
+# McCtrl Project
 ################################################################################
 add_executable(${PROJECT_NAME} main.cpp)
+target_compile_options(${PROJECT_NAME} PRIVATE "/W4")
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE
     -D QT_DEPRECATED_WARNINGS
     -D QT_QML_DEBUG
-    -D QT_DISABLE_DEPRECATED_BEFORE=0x060000)
+    -D QT_DISABLE_DEPRECATED_BEFORE=0x060000
+)
 
 target_sources(${PROJECT_NAME} PRIVATE
     qmlmqttclient.cpp
@@ -74,7 +89,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE Qt5::Quick Qt5::QuickControls2 mos
 # use rpath for cross compilation
 if (NOT WIN32)
     add_library(${PROJECT_NAME}_rpath INTERFACE)
-    target_link_libraries(${PROJECT_NAME}_rpath
+    target_link_libraries(${PROJECT_NAME}_rpath INTERFACE
         "-Wl,-rpath,\$ORIGIN/../../../lib"
         "-Wl,-rpath-link,/home/schuetz/raspberry_pi/sysroot/opt/vc/lib"
         "-Wl,-rpath-link,/home/schuetz/raspberry_pi/sysroot/lib/arm-linux-gnueabihf"
