@@ -67,7 +67,11 @@ endif()
 # McCtrl Project
 ################################################################################
 add_executable(${PROJECT_NAME} main.cpp)
-target_compile_options(${PROJECT_NAME} PRIVATE "/W4")
+if(WIN32)
+    target_compile_options(${PROJECT_NAME} PRIVATE "/W4")
+else()
+    target_compile_options(${PROJECT_NAME} PRIVATE "-Wall -pedantic")
+endif()
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE
     -D QT_DEPRECATED_WARNINGS
