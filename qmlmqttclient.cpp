@@ -8,7 +8,8 @@
 QmlMqttClient::QmlMqttClient(QObject* parent)
     : QThread(parent)
     , m_IsConnected(false)
-    , m_Host("192.168.1.21")
+    //, m_Host("192.168.1.21")
+    , m_Host("test.mosquitto.org")
     , m_Port(1883)
 {
     QThread::start();
@@ -32,18 +33,14 @@ void QmlMqttClient::subscribe(const QString& topic)
     mosqpp::mosquittopp::subscribe(nullptr, tp.c_str());
 }
 
-void QmlMqttClient::publish(const QString& topic, const QString& msg)
+void QmlMqttClient::publish(const QString& topic, const QString& payload)
 {
-    qDebug() << "Publishing: " << topic << " - " << msg;
-    std::string const tp = topic.toStdString();
-    std::string const pld = msg.toStdString();
-    char buf[6];
-    memset(buf, 0, 6 * sizeof(char));
-    memcpy(buf, pld.c_str(), msg.length());
-    mosqpp::mosquittopp::publish(nullptr,
-        tp.c_str(),
-        msg.length(),
-        buf);
+    static const int qos = 1;
+    qDebug() << "Publishing: " << topic << " - " << payload;
+    MqttMessage msg;
+    msg.topic = topic;
+    msg.payload = payload;
+    m_PublishQueue.enqueue(msg);
 }
 
 int QmlMqttClient::port() const
@@ -105,6 +102,9 @@ void QmlMqttClient::on_connect(int const rc)
 {
     if (rc == 0) {
         setIsConnected(true);
+        subscribe("mcctrl/lights/on");
+        subscribe("mcctrl/lights/+/bri");
+        subscribe("mcctrl/lights/+/on");
     }
 }
 void QmlMqttClient::on_disconnect(int rc)
@@ -121,12 +121,25 @@ void QmlMqttClient::on_message(const struct mosquitto_message* message)
     qDebug() << "Received TOPIC: " << topic;
     qDebug() << "Received PAYLOAD: " << msg;
 
-    emit onMessage(topic, msg);
+    if (topic == "mcctrl/lights/on") {
+        emit onLightsOnChanged(msg == "True");
+    } else if (topic == "mcctrl/lights/1/bri") {
+        emit onLightBrightnessChanged(1, msg.toInt());
+    } else if (topic == "mcctrl/lights/2/bri") {
+        emit onLightBrightnessChanged(2, msg.toInt());
+    } else if (topic == "mcctrl/lights/3/bri") {
+        emit onLightBrightnessChanged(3, msg.toInt());
+    } else if (topic == "mcctrl/lights/1/on") {
+        emit onLightOnChanged(1, msg == "True");
+    } else if (topic == "mcctrl/lights/2/on") {
+        emit onLightOnChanged(2, msg == "True");
+    } else if (topic == "mcctrl/lights/3/on") {
+        emit onLightOnChanged(3, msg == "True");
+    }
 }
 
-void QmlMqttClient::on_log(int const level, const char* const str)
+void QmlMqttClient::on_log(int const, const char* const)
 {
-    qDebug() << "Log[" << level << "]: " << str;
 }
 
 void QmlMqttClient::on_error()
@@ -148,11 +161,21 @@ bool QmlMqttClient::isShutdown()
 
 void QmlMqttClient::run()
 {
+    static const int qos = 1;
     int rc = 0;
     while (!isShutdown()) {
-        rc = mosqpp::mosquittopp::loop();
+        rc = mosqpp::mosquittopp::loop(100);
         if (rc) {
             mosqpp::mosquittopp::reconnect();
+        } else if (!m_PublishQueue.isEmpty()) {
+            MqttMessage const msg = m_PublishQueue.dequeue();
+            std::string const topic = msg.topic.toStdString();
+            std::string const payload = msg.payload.toStdString();
+            mosqpp::mosquittopp::publish(nullptr,
+                topic.c_str(),
+                msg.payload.length(),
+                payload.c_str(),
+                qos);
         }
     }
 }

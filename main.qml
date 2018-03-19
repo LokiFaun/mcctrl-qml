@@ -7,7 +7,7 @@ import QtQuick.Extras 1.4
 import MqttClient 1.0
 
 ApplicationWindow {
-    id: applicationWindow
+    id: mcctrl
     visible: true
 
     height: 480
@@ -28,27 +28,55 @@ ApplicationWindow {
         readonly property string thermometer: qsTr("\uf2c8")
     }
 
+    property bool lightsOn: false
+    property int light1_bri: 0
+    property int light2_bri: 0
+    property int light3_bri: 0
+    property bool light1_on: false
+    property bool light2_on: false
+    property bool light3_on: false
+
     MqttClient {
         id: client
-    }
-
-    function onMessage(topic, payload) {
-        console.log("RECEIVED: " + topic);
-        console.log("PAYLOAD" + payload);
-        if (topic === 'mcctrl/lights/on') {
-            console.log("Setting hueState");
-            hueButton.hueState = payload === 'True';
-        }
     }
 
     function onMqttConnected(isConnected) {
         console.log("MQTT connected");
     }
 
+    function onLightsOnChanged(lightsOn) {
+        console.log("Lights are: " + lightsOn ? "on!" : "off!");
+        mcctrl.lightsOn = lightsOn;
+    }
+
+    function onLightBrightnessChanged(light, brightness) {
+        console.log("light " + light + " has brightness: " + brightness)
+        if (light === 1) {
+            mcctrl.light1_bri = brightness;
+        } else if (light === 2) {
+            mcctrl.light2_bri = brightness;
+        } else if (light === 3) {
+            mcctrl.light3_bri = brightness;
+        }
+    }
+
+    function onLightOnChanged(light, lightOn) {
+        console.log("light " + light + " is " + lightOn ? "on" : "off");
+        if (light === 1) {
+            mcctrl.light1_on = lightOn;
+        } else if (light === 2) {
+            mcctrl.light2_on = lightOn;
+        } else if (light === 3) {
+            mcctrl.light3_on = lightOn;
+        }
+    }
+
     Component.onCompleted: {
         client.connect()
-        client.onMessage.connect(onMessage)
         client.onConnect.connect(onMqttConnected)
+        client.onLightsOnChanged.connect(onLightsOnChanged)
+        client.onLightBrightnessChanged.connect(onLightBrightnessChanged)
+        client.onLightOnChanged.connect(onLightOnChanged)
     }
 
     header: ToolBar {
@@ -96,7 +124,7 @@ ApplicationWindow {
                 font.family: "mcctrl"
                 font.pixelSize: 30
                 text: fontello.close
-                onClicked: applicationWindow.close()
+                onClicked: mcctrl.close()
             }
             ToolButton {
                 anchors.right: closeButton.left
@@ -134,6 +162,10 @@ ApplicationWindow {
                         text: qsTr("Hue")
                         Layout.fillHeight: true
                         Layout.fillWidth: true
+                        onClicked: {
+                            toolbarMenuButton.closeToolbar()
+                            mainStack.push(hue)
+                        }
                     }
                     Button {
                         text: qsTr("Sensors")
@@ -171,23 +203,10 @@ ApplicationWindow {
                 Layout.column: 0
                 Layout.columnSpan: 2
                 text: qsTr("Hue")
-                id: hueButton
-                property bool hueState: false
-                Component.onCompleted: {
-                    console.log("Subscribe to hue-lights");
-                    client.subscribe("mcctrl/lights/on");
-                }
-
                 onClicked: {
-                    if (hueButton.hueState === true) {
-                        client.publish("mcctrl/cmd/lights/on", "False")
-                        hueButton.hueState = false;
-                    } else {
-                        client.publish("mcctrl/cmd/lights/on", "True")
-                        hueButton.hueState = true;
-                    }
+                    toolbarMenuButton.closeToolbar()
+                    mainStack.push(hue)
                 }
-
             }
             Button {
                 Layout.fillHeight: true
@@ -217,6 +236,87 @@ ApplicationWindow {
         id: system
         Label {
             text: "system"
+        }
+    }
+
+    Component {
+        id: hue
+        RowLayout {
+            Switch {
+                text: "Room"
+                checked: mcctrl.lightsOn
+                onClicked: {
+                    client.publish("mcctrl/cmd/lights/on", mcctrl.lightsOn === true ? "False" : "True")
+                }
+            }
+            RowLayout {
+                ColumnLayout {
+                    Label {
+                        text: "Light 1"
+                    }
+                    Switch {
+                        checked: mcctrl.light1_on
+                        onClicked: {
+                            client.publish("mcctrl/cmd/lights/1/on", mcctrl.light1_on === true ? "False" : "True")
+                        }
+                    }
+                    Slider {
+                        from: 0
+                        to: 254
+                        stepSize: 1
+                        value: mcctrl.light1_bri
+                        orientation: "Vertical"
+                        live: false
+                        onValueChanged: {
+                            client.publish("mcctrl/cmd/lights/1/bri", Math.round(value).toString())
+                        }
+                    }
+                }
+                ColumnLayout {
+                    Label {
+                        text: "Light 2"
+                    }
+                    Switch {
+                        checked: mcctrl.light2_on
+                        onClicked: {
+                            client.publish("mcctrl/cmd/lights/1/on", mcctrl.light2_on === true ? "False" : "True")
+                        }
+                    }
+                    Slider {
+                        from: 0
+                        to: 254
+                        stepSize: 1
+                        value: mcctrl.light2_bri
+                        orientation: "Vertical"
+                        live: false
+                        onValueChanged: {
+                            client.publish("mcctrl/cmd/lights/2/bri", Math.round(value).toString())
+                        }
+                    }
+                }
+                ColumnLayout {
+                    Label {
+                        text: "Light 3"
+                    }
+                    Switch {
+                        checked: mcctrl.light3_on
+                        onClicked: {
+                            client.publish("mcctrl/cmd/lights/3/on", mcctrl.light3_on === true ? "False" : "True")
+                        }
+                    }
+                    Slider {
+                        from: 0
+                        to: 254
+                        stepSize: 1
+                        value: mcctrl.light3_bri
+                        orientation: "Vertical"
+                        live: false
+                        onValueChanged: {
+                            client.publish("mcctrl/cmd/lights/3/bri", Math.round(value).toString())
+                        }
+                    }
+                }
+            }
         }
     }
 }

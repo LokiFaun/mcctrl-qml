@@ -3,6 +3,7 @@
 
 #include <QMutex>
 #include <QObject>
+#include <QQueue>
 #include <QString>
 #include <QThread>
 #include <QWaitCondition>
@@ -21,7 +22,7 @@ public:
 
     Q_INVOKABLE void connect();
     Q_INVOKABLE void subscribe(QString const& topic);
-    Q_INVOKABLE void publish(QString const& topic, QString const& msg);
+    Q_INVOKABLE void publish(QString const& topic, QString const& payload);
 
     bool isConnected() const;
     void setIsConnected(bool isConnected);
@@ -42,10 +43,12 @@ public:
     virtual void run() override;
 
 Q_SIGNALS:
-    void onMessage(const QString&, const QString&);
     void onConnect(bool);
     void hostChanged(const QString&);
     void portChanged(int);
+    void onLightsOnChanged(bool);
+    void onLightBrightnessChanged(int, int);
+    void onLightOnChanged(int, bool);
 
 private:
     void shutdown();
@@ -56,6 +59,13 @@ private:
     bool m_IsConnected;
     QString m_Host;
     int m_Port;
+
+    struct MqttMessage {
+        QString topic;
+        QString payload;
+    };
+
+    QQueue<MqttMessage> m_PublishQueue;
 };
 
 #endif // QMLMQTTCLIENT_H
