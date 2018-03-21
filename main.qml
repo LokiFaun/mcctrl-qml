@@ -4,6 +4,7 @@ import QtQuick.Controls.Material 2.3
 import QtQuick.Controls.Universal 2.2
 import QtQuick.Layouts 1.3
 import QtQuick.Extras 1.4
+import QtQuick.Dialogs 1.2
 import MqttClient 1.0
 
 ApplicationWindow {
@@ -12,6 +13,8 @@ ApplicationWindow {
 
     height: 480
     width: 720
+
+    flags: Qt.FramelessWindowHint | Qt.Window
 
     Universal.theme: Universal.Dark
     Universal.accent: Universal.Cyan
@@ -77,6 +80,21 @@ ApplicationWindow {
         client.onLightsOnChanged.connect(onLightsOnChanged)
         client.onLightBrightnessChanged.connect(onLightBrightnessChanged)
         client.onLightOnChanged.connect(onLightOnChanged)
+    }
+
+    ColorDialog {
+        id: colorDialog
+        title: "Please choose a color"
+        modality: "ApplicationModal"
+        property int light: 0
+        onAccepted: {
+            if (light != 0) {
+                console.log("Setting light " + light);
+                console.log("Red: " + color.r);
+                console.log("Green: " + color.g);
+                console.log("Blue: " + color.b);
+            }
+        }
     }
 
     header: ToolBar {
@@ -271,6 +289,13 @@ ApplicationWindow {
                             client.publish("mcctrl/cmd/lights/1/bri", Math.round(value).toString())
                         }
                     }
+                    RoundButton {
+                        text: qsTr("C")
+                        onClicked: {
+                            colorDialog.light = 1;
+                            colorDialog.visible = true
+                        }
+                    }
                 }
                 ColumnLayout {
                     Label {
@@ -293,6 +318,13 @@ ApplicationWindow {
                             client.publish("mcctrl/cmd/lights/2/bri", Math.round(value).toString())
                         }
                     }
+                    RoundButton {
+                        text: qsTr("C")
+                        onClicked: {
+                            colorDialog.light = 2;
+                            colorDialog.visible = true
+                        }
+                    }
                 }
                 ColumnLayout {
                     Label {
@@ -313,6 +345,13 @@ ApplicationWindow {
                         live: false
                         onValueChanged: {
                             client.publish("mcctrl/cmd/lights/3/bri", Math.round(value).toString())
+                        }
+                    }
+                    RoundButton {
+                        text: qsTr("C")
+                        onClicked: {
+                            colorDialog.light = 3;
+                            colorDialog.visible = true
                         }
                     }
                 }

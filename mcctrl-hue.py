@@ -11,6 +11,7 @@ def on_connect(client, user_data, flags, rc):
     client.subscribe('mcctrl/cmd/lights/on')
     client.subscribe('mcctrl/cmd/lights/+/bri')
     client.subscribe('mcctrl/cmd/lights/+/on')
+    client.subscribe('mcctrl/cmd/lights/+/clr')
 
 
 def on_message(client, userdata, msg):

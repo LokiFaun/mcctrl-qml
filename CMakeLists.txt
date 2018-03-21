@@ -40,7 +40,12 @@ else()
     set (CMAKE_PREFIX_PATH "~/raspberry_pi/qt5pi")
 endif()
 
-find_package(Qt5 COMPONENTS Core Quick QuickControls2 REQUIRED)
+find_package(Qt5 COMPONENTS
+    Core
+    Quick
+    QuickControls2
+    REQUIRED
+)
 
 if(Qt5_FOUND AND WIN32 AND TARGET Qt5::qmake AND NOT TARGET Qt5::windeployqt)
     get_target_property(_qt5_qmake_location Qt5::qmake IMPORTED_LOCATION)
@@ -70,7 +75,7 @@ add_executable(${PROJECT_NAME} main.cpp)
 if(WIN32)
     target_compile_options(${PROJECT_NAME} PRIVATE "/W4")
 else()
-    target_compile_options(${PROJECT_NAME} PRIVATE "-Wall" "-pedantic")
+    target_compile_options(${PROJECT_NAME} PRIVATE "-Wall" "-pedantic" "-g")
 endif()
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE
@@ -88,7 +93,11 @@ target_include_directories(${PROJECT_NAME} PRIVATE mosquitto/lib)
 target_include_directories(${PROJECT_NAME} PRIVATE mosquitto/lib/cpp)
 
 # Use paho mqtt cpp and Qt5
-target_link_libraries(${PROJECT_NAME} PRIVATE Qt5::Quick Qt5::QuickControls2 mosquittopp)
+target_link_libraries(${PROJECT_NAME} PRIVATE
+    Qt5::Quick
+    Qt5::QuickControls2
+    mosquittopp
+)
 
 # use rpath for cross compilation
 if (NOT WIN32)
