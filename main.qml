@@ -23,13 +23,15 @@ ApplicationWindow {
 
     Item {
         id: fontello
-        readonly property string menu: qsTr("\uf0c9")
-        readonly property string close: qsTr("\ue800")
-        readonly property string home: qsTr("\ue801")
-        readonly property string lightbulb: qsTr("\uf0eb")
-        readonly property string desktop: qsTr("\uf108")
-        readonly property string thermometer: qsTr("\uf2c8")
+        readonly property string menu: "\uf0c9"
+        readonly property string close: "\ue800"
+        readonly property string home: "\ue801"
+        readonly property string lightbulb: "\uf0eb"
+        readonly property string desktop: "\uf108"
+        readonly property string thermometer: "\uf2c8"
+        readonly property string back: "\ue802"
     }
+
 
     property bool lightsOn: false
     property int light1_bri: 0
@@ -110,22 +112,11 @@ ApplicationWindow {
                 font.pixelSize: 20
                 text: fontello.menu
 
-                property bool toolbarActive: false
-                function closeToolbar() {
-                    if (!toolbarMenuButton.toolbarActive) {
-                        return
-                    }
-
-                    mainStack.pop()
-                    toolbarMenuButton.toolbarActive = false
-                }
-
                 onClicked: {
-                    if (!toolbarActive) {
-                        mainStack.push(toolbarMenu)
-                        toolbarMenuButton.toolbarActive = true
+                    if (toolbarDrawer.opened) {
+                        toolbarDrawer.close()
                     } else {
-                        toolbarMenuButton.closeToolbar()
+                        toolbarDrawer.open()
                     }
                 }
             }
@@ -145,13 +136,56 @@ ApplicationWindow {
                 onClicked: mcctrl.close()
             }
             ToolButton {
+                id: homeButton
                 anchors.right: closeButton.left
                 font.family: "mcctrl"
                 font.pixelSize: 20
                 text: fontello.home
                 onClicked: {
-                    toolbarMenuButton.closeToolbar()
+                    mainStack.clear()
                     mainStack.push(mainView)
+                }
+            }
+            ToolButton {
+                anchors.right: homeButton.left
+                text: fontello.back
+                onClicked: {
+                    mainStack.pop()
+                }
+            }
+        }
+    }
+
+    Drawer {
+        id: toolbarDrawer
+        y: header.height
+        height: mcctrl.height - header.height
+        edge: Qt.LeftEdge
+        ColumnLayout {
+            Button {
+                id: hueMenuButton
+                Layout.preferredWidth: 200
+                Layout.alignment: Qt.AlignTop | Qt.AlignLeft
+                text: fontello.lightbulb + qsTr(" Hue")
+                onClicked: {
+                    mainStack.push(hue)
+                    toolbarDrawer.close()
+                }
+            }
+            Button {
+                id: sensorMenuButton
+                Layout.preferredWidth: 200
+                anchors.top: hueMenuButton.bottom
+                text: fontello.thermometer + qsTr(" Sensors")
+            }
+            Button {
+                id: systemMenuButton
+                Layout.preferredWidth: 200
+                anchors.top: sensorMenuButton.bottom
+                text: fontello.desktop + qsTr(" System")
+                onClicked: {
+                    mainStack.push(system)
+                    toolbarDrawer.close()
                 }
             }
         }
@@ -168,49 +202,6 @@ ApplicationWindow {
     }
 
     Component {
-        id: toolbarMenu
-        RowLayout {
-            Item {
-                Layout.fillHeight: true
-                Layout.fillWidth: true
-                GridLayout {
-                    columns: 1
-                    anchors.fill: parent
-                    Button {
-                        text: qsTr("Hue")
-                        Layout.fillHeight: true
-                        Layout.fillWidth: true
-                        onClicked: {
-                            toolbarMenuButton.closeToolbar()
-                            mainStack.push(hue)
-                        }
-                    }
-                    Button {
-                        text: qsTr("Sensors")
-                        Layout.fillHeight: true
-                        Layout.fillWidth: true
-                    }
-                    Button {
-                        text: qsTr("System")
-                        Layout.fillHeight: true
-                        Layout.fillWidth: true
-                        onClicked: {
-                            toolbarMenuButton.closeToolbar()
-                            mainStack.push(system)
-                        }
-                    }
-                }
-            }
-            Item {
-                Layout.fillWidth: true
-            }
-            Item {
-                Layout.fillWidth: true
-            }
-        }
-    }
-
-    Component {
         id: mainView
         GridLayout {
             columns: 4
@@ -220,9 +211,8 @@ ApplicationWindow {
                 Material.elevation: 6
                 Layout.column: 0
                 Layout.columnSpan: 2
-                text: qsTr("Hue")
+                text: fontello.lightbulb + qsTr(" Hue")
                 onClicked: {
-                    toolbarMenuButton.closeToolbar()
                     mainStack.push(hue)
                 }
             }
@@ -232,7 +222,7 @@ ApplicationWindow {
                 Layout.column: 2
                 Layout.columnSpan: 2
                 Material.elevation: 6
-                text: qsTr("Sensors")
+                text: fontello.thermometer + qsTr(" Sensors")
             }
             Button {
                 Layout.fillHeight: true
@@ -241,9 +231,8 @@ ApplicationWindow {
                 Layout.column: 1
                 Layout.columnSpan: 2
                 Material.elevation: 6
-                text: qsTr("System")
+                text: fontello.desktop + qsTr(" System")
                 onClicked: {
-                    toolbarMenuButton.closeToolbar()
                     mainStack.push(system)
                 }
             }

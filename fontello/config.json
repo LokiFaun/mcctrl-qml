@@ -41,6 +41,12 @@
       "css": "cancel-circled2",
       "code": 59392,
       "src": "fontawesome"
+    },
+    {
+      "uid": "3ba4275937db277075fc47d6b5a69a2e",
+      "css": "back",
+      "code": 59394,
+      "src": "entypo"
     }
   ]
 }
