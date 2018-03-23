@@ -1,6 +1,10 @@
 # This file is used to ignore files which are generated
 # ----------------------------------------------------------------------------
 
+bridge.ip
+mqtt.ip.hj
+mqtt.ip
+
 *~
 *.autosave
 *.a

@@ -1,5 +1,6 @@
 #include "qmlmqttclient.h"
 
+#include "mqtt.ip.h"
 #include <QDebug>
 #include <QMutexLocker>
 #include <QString>
@@ -8,8 +9,7 @@
 QmlMqttClient::QmlMqttClient(QObject* parent)
     : QThread(parent)
     , m_IsConnected(false)
-    //, m_Host("192.168.1.21")
-    , m_Host("test.mosquitto.org")
+    , m_Host(mqtt_ip)
     , m_Port(1883)
 {
     QThread::start();

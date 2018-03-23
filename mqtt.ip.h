@@ -1,0 +1,1 @@
+static const char *const mqtt_ip = "test.mosquitto.org";

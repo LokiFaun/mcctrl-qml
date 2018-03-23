@@ -5,6 +5,14 @@ import time
 import paho.mqtt.client as mqtt
 from Adafruit_BME280 import *
 
+file = open('mqtt.ip', 'r')
+try:
+    mqtt_ip = file.read()
+except:
+    mqtt_ip = '0.0.0.0'
+finally:
+    file.close()
+
 
 def on_connect(client, user_data, flags, rc):
     print("Connected with result code " + str(rc))
@@ -23,7 +31,7 @@ sensor = BME280(
 client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
-client.connect("0.0.0.0", 1883, 60)
+client.connect(mqtt_ip, 1883, 60)
 client.loop_start()
 
 while True:

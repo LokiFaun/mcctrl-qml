@@ -2,7 +2,23 @@ import time
 import paho.mqtt.client as mqtt
 from phue import Bridge
 
-bridge = Bridge('192.168.1.28')
+file = open('bridge.ip', 'r')
+try:
+    bridge_ip = file.read()
+except:
+    bridge_ip = '0.0.0.0'
+finally:
+    file.close()
+
+file = open('mqtt.ip', 'r')
+try:
+    mqtt_ip = file.read()
+except:
+    mqtt_ip = '0.0.0.0'
+finally:
+    file.close()
+
+bridge = Bridge(bridge_ip)
 bridge.connect()
 
 
@@ -37,8 +53,7 @@ def on_message(client, userdata, msg):
 client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
-#client.connect('192.168.1.21')
-client.connect('test.mosquitto.org')
+client.connect(mqtt_ip)
 client.loop_start()
 
 while (True):
