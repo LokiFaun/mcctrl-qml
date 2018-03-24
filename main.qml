@@ -84,6 +84,19 @@ ApplicationWindow {
         client.onLightOnChanged.connect(onLightOnChanged)
     }
 
+    function rgb2xy(r, g, b) {
+        r = (r > 0.04045) ? Math.pow((r + 0.055) / (1.0 + 0.055), 2.4) : (r / 12.92);
+        g = (g > 0.04045) ? Math.pow((g + 0.055) / (1.0 + 0.055), 2.4) : (b / 12.92);
+        b = (b > 0.04045) ? Math.pow((b + 0.055) / (1.0 + 0.055), 2.4) : (b / 12.92);
+        var X = r * 0.664511 + g * 0.154324 + b * 0.162028;
+        var Y = r * 0.283881 + g * 0.668433 + b * 0.047685;
+        var Z = r * 0.000088 + g * 0.072310 + b * 0.986039;
+
+        var x = X / (X + Y + Z);
+        var y = Y / (X + Y + Z);
+        return [x, y];
+    }
+
     ColorDialog {
         id: colorDialog
         title: "Please choose a color"
@@ -91,10 +104,8 @@ ApplicationWindow {
         property int light: 0
         onAccepted: {
             if (light != 0) {
-                console.log("Setting light " + light);
-                console.log("Red: " + color.r);
-                console.log("Green: " + color.g);
-                console.log("Blue: " + color.b);
+                var xy = rgb2xy(color.r, color.g, color.b);
+                client.publish('mcctrl/cmd/lights/' + light + '/clr', '[' + xy + ']');
             }
         }
     }
@@ -293,7 +304,7 @@ ApplicationWindow {
                     Switch {
                         checked: mcctrl.light2_on
                         onClicked: {
-                            client.publish("mcctrl/cmd/lights/1/on", mcctrl.light2_on === true ? "False" : "True")
+                            client.publish("mcctrl/cmd/lights/2/on", mcctrl.light2_on === true ? "False" : "True")
                         }
                     }
                     Slider {
