@@ -5,13 +5,7 @@ import time
 import paho.mqtt.client as mqtt
 from Adafruit_BME280 import *
 
-file = open('mqtt.ip', 'r')
-try:
-    mqtt_ip = file.read()
-except:
-    mqtt_ip = '0.0.0.0'
-finally:
-    file.close()
+mqtt_ip = '127.0.0.1'
 
 
 def on_connect(client, user_data, flags, rc):
@@ -35,8 +29,8 @@ client.connect(mqtt_ip, 1883, 60)
 client.loop_start()
 
 while True:
-    time.sleep(2)
     degrees = sensor.read_temperature()
     client.publish("mcctrl/temperature", '{0:0.3f}'.format(degrees))
     pressure = sensor.read_pressure() / 100
     client.publish("mcctrl/pressure", '{0:0.03f}'.format(pressure))
+    time.sleep(30)

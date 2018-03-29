@@ -105,6 +105,8 @@ void QmlMqttClient::on_connect(int const rc)
         subscribe("mcctrl/lights/on");
         subscribe("mcctrl/lights/+/bri");
         subscribe("mcctrl/lights/+/on");
+        subscribe("mcctrl/temperature");
+        subscribe("mcctrl/pressure");
     }
 }
 void QmlMqttClient::on_disconnect(int rc)

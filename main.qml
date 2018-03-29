@@ -42,6 +42,8 @@ ApplicationWindow {
     property bool light1_on: false
     property bool light2_on: false
     property bool light3_on: false
+    property double temperature: 0.0
+    property double pressure: 0.0
 
     MqttClient {
         id: client
@@ -49,7 +51,7 @@ ApplicationWindow {
 
     SensorDb {
         id: sensorDb
-        connectionString: ":memory:"
+        connectionString: "test.sqlite"
     }
 
     function onMqttConnected(isConnected) {
@@ -86,11 +88,13 @@ ApplicationWindow {
     function onNewTemperature(value) {
         var date = new Date();
         sensorDb.addTemperature(date.toUTCString(), value);
+        mcctrl.temperature = value;
     }
 
     function onNewPressure(value) {
         var date = new Date();
         sensorDb.addPressure(date.toUTCString(), value);
+        mcctrl.pressure = value;
     }
 
     Component.onCompleted: {
@@ -395,7 +399,7 @@ ApplicationWindow {
                 Label {
                     Layout.alignment: Qt.AlignCenter
                     horizontalAlignment: "AlignHCenter"
-                    text: qsTr("Temperature\n23°C")
+                    text: qsTr("Temperature\n" + mcctrl.temperature + "°C")
                     font.pixelSize: 36
                 }
             }
@@ -415,7 +419,7 @@ ApplicationWindow {
                 Label {
                     Layout.alignment: Qt.AlignCenter
                     horizontalAlignment: "AlignHCenter"
-                    text: qsTr("Pressure\n998hPa")
+                    text: qsTr("Pressure\n" + mcctrl.pressure + "hPa")
                     font.pixelSize: 36
                 }
             }
