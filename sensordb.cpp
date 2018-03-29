@@ -2,9 +2,7 @@
 #include <QDebug>
 #include <QVector>
 
-#pragma warning(push, 0)
 #include <sqlite_orm/sqlite_orm.h>
-#pragma warning(pop)
 
 static std::string const TemperatureTable = "Temperature";
 static std::string const PressureTable = "Pressure";

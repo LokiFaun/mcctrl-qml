@@ -19,8 +19,11 @@ set(WITH_THREADING OFF CACHE STRING "Disable threading")
 set(WITH_LIB_ONLY ON STRING "Build only lib")
 add_subdirectory(mosquitto)
 if(WIN32)
-target_compile_options(libmosquitto PRIVATE "/W0")
-target_compile_options(mosquittopp PRIVATE "/W0")
+    target_compile_options(libmosquitto PRIVATE "/W0")
+    target_compile_options(mosquittopp PRIVATE "/W0")
+elseif(UNIX)
+    target_compile_options(libmosquitto PRIVATE "-w")
+    target_compile_options(mosquittopp PRIVATE "-w")
 endif()
 
 ################################################################################
@@ -28,8 +31,13 @@ endif()
 ################################################################################
 project(sqlite)
 add_library(${PROJECT_NAME} STATIC sqlite/sqlite3.c)
-target_compile_options(${PROJECT_NAME} PRIVATE "/W0")
 target_include_directories(${PROJECT_NAME} PUBLIC sqlite)
+if(WIN32)
+    target_compile_options(${PROJECT_NAME} PRIVATE "/W0")
+elseif(UNIX)
+    target_link_libraries(${PROJECT_NAME} PUBLIC pthread dl)
+    target_compile_options(${PROJECT_NAME} PRIVATE "-w")
+endif()
 
 ################################################################################
 # Qt
