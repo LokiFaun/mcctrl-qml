@@ -1,3 +1,6 @@
 [submodule "mosquitto"]
 	path = mosquitto
 	url = https://github.com/eclipse/mosquitto.git
+[submodule "sqlite_orm"]
+	path = sqlite_orm
+	url = https://github.com/fnc12/sqlite_orm.git

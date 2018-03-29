@@ -5,7 +5,9 @@ import QtQuick.Controls.Universal 2.2
 import QtQuick.Layouts 1.3
 import QtQuick.Extras 1.4
 import QtQuick.Dialogs 1.2
+import QtCharts 2.2
 import MqttClient 1.0
+import SensorDb 1.0
 
 ApplicationWindow {
     id: mcctrl
@@ -45,6 +47,11 @@ ApplicationWindow {
         id: client
     }
 
+    SensorDb {
+        id: sensorDb
+        connectionString: ":memory:"
+    }
+
     function onMqttConnected(isConnected) {
         console.log("MQTT connected");
     }
@@ -76,25 +83,26 @@ ApplicationWindow {
         }
     }
 
+    function onNewTemperature(value) {
+        var date = new Date();
+        sensorDb.addTemperature(date.toUTCString(), value);
+    }
+
+    function onNewPressure(value) {
+        var date = new Date();
+        sensorDb.addPressure(date.toUTCString(), value);
+    }
+
     Component.onCompleted: {
         client.connect()
         client.onConnect.connect(onMqttConnected)
         client.onLightsOnChanged.connect(onLightsOnChanged)
         client.onLightBrightnessChanged.connect(onLightBrightnessChanged)
         client.onLightOnChanged.connect(onLightOnChanged)
-    }
+        client.onNewTemperature.connect(onNewTemperature);
+        client.onNewPressure.connect(onNewPressure);
 
-    function rgb2xy(r, g, b) {
-        r = (r > 0.04045) ? Math.pow((r + 0.055) / (1.0 + 0.055), 2.4) : (r / 12.92);
-        g = (g > 0.04045) ? Math.pow((g + 0.055) / (1.0 + 0.055), 2.4) : (b / 12.92);
-        b = (b > 0.04045) ? Math.pow((b + 0.055) / (1.0 + 0.055), 2.4) : (b / 12.92);
-        var X = r * 0.664511 + g * 0.154324 + b * 0.162028;
-        var Y = r * 0.283881 + g * 0.668433 + b * 0.047685;
-        var Z = r * 0.000088 + g * 0.072310 + b * 0.986039;
-
-        var x = X / (X + Y + Z);
-        var y = Y / (X + Y + Z);
-        return [x, y];
+        sensorDb.load();
     }
 
     ColorDialog {
@@ -102,6 +110,18 @@ ApplicationWindow {
         title: "Please choose a color"
         modality: "ApplicationModal"
         property int light: 0
+        function rgb2xy(r, g, b) {
+            r = (r > 0.04045) ? Math.pow((r + 0.055) / (1.0 + 0.055), 2.4) : (r / 12.92);
+            g = (g > 0.04045) ? Math.pow((g + 0.055) / (1.0 + 0.055), 2.4) : (b / 12.92);
+            b = (b > 0.04045) ? Math.pow((b + 0.055) / (1.0 + 0.055), 2.4) : (b / 12.92);
+            var X = r * 0.664511 + g * 0.154324 + b * 0.162028;
+            var Y = r * 0.283881 + g * 0.668433 + b * 0.047685;
+            var Z = r * 0.000088 + g * 0.072310 + b * 0.986039;
+
+            var x = X / (X + Y + Z);
+            var y = Y / (X + Y + Z);
+            return [x, y];
+        }
         onAccepted: {
             if (light != 0) {
                 var xy = rgb2xy(color.r, color.g, color.b);
@@ -188,6 +208,10 @@ ApplicationWindow {
                 Layout.preferredWidth: 200
                 anchors.top: hueMenuButton.bottom
                 text: fontello.thermometer + qsTr(" Sensors")
+                onClicked: {
+                    mainStack.push(sensors)
+                    toolbarDrawer.close()
+                }
             }
             Button {
                 id: systemMenuButton
@@ -223,6 +247,7 @@ ApplicationWindow {
                 Layout.column: 0
                 Layout.columnSpan: 2
                 text: fontello.lightbulb + qsTr(" Hue")
+                font.pixelSize: 32
                 onClicked: {
                     mainStack.push(hue)
                 }
@@ -234,6 +259,10 @@ ApplicationWindow {
                 Layout.columnSpan: 2
                 Material.elevation: 6
                 text: fontello.thermometer + qsTr(" Sensors")
+                font.pixelSize: 32
+                onClicked: {
+                    mainStack.push(sensors)
+                }
             }
             Button {
                 Layout.fillHeight: true
@@ -243,17 +272,11 @@ ApplicationWindow {
                 Layout.columnSpan: 2
                 Material.elevation: 6
                 text: fontello.desktop + qsTr(" System")
+                font.pixelSize: 32
                 onClicked: {
                     mainStack.push(system)
                 }
             }
-        }
-    }
-
-    Component {
-        id: system
-        Label {
-            text: "system"
         }
     }
 
@@ -356,6 +379,61 @@ ApplicationWindow {
                     }
                 }
             }
+        }
+    }
+
+    Component {
+        id: sensors
+        GridLayout {
+            columns: 2
+            rows: 2
+            ColumnLayout  {
+                Layout.fillHeight: true
+                Layout.preferredWidth: 200
+                Layout.column: 0
+                Layout.row: 0
+                Label {
+                    Layout.alignment: Qt.AlignCenter
+                    horizontalAlignment: "AlignHCenter"
+                    text: qsTr("Temperature\n23°C")
+                    font.pixelSize: 36
+                }
+            }
+            ChartView {
+                Layout.fillHeight: true
+                Layout.fillWidth: true
+                Layout.column: 1
+                Layout.row: 0
+                title: qsTr("Temperature")
+                theme: ChartView.ChartThemeDark
+            }
+            ColumnLayout {
+                Layout.fillHeight: true
+                Layout.preferredWidth: 200
+                Layout.column: 0
+                Layout.row: 1
+                Label {
+                    Layout.alignment: Qt.AlignCenter
+                    horizontalAlignment: "AlignHCenter"
+                    text: qsTr("Pressure\n998hPa")
+                    font.pixelSize: 36
+                }
+            }
+            ChartView {
+                Layout.fillHeight: true
+                Layout.fillWidth: true
+                Layout.column: 1
+                Layout.row: 1
+                title: qsTr("Pressure")
+                theme: ChartView.ChartThemeDark
+            }
+        }
+    }
+
+    Component {
+        id: system
+        Label {
+            text: "system"
         }
     }
 }

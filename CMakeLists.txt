@@ -7,8 +7,6 @@ message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
 message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_C_FLAGS}")
 endif()
 
-project(mcctrl)
-
 # Find includes in corresponding build directories
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -24,6 +22,14 @@ if(WIN32)
 target_compile_options(libmosquitto PRIVATE "/W0")
 target_compile_options(mosquittopp PRIVATE "/W0")
 endif()
+
+################################################################################
+# QLite
+################################################################################
+project(sqlite)
+add_library(${PROJECT_NAME} STATIC sqlite/sqlite3.c)
+target_compile_options(${PROJECT_NAME} PRIVATE "/W0")
+target_include_directories(${PROJECT_NAME} PUBLIC sqlite)
 
 ################################################################################
 # Qt
@@ -44,6 +50,8 @@ find_package(Qt5 COMPONENTS
     Core
     Quick
     QuickControls2
+    Charts
+    Widgets
     REQUIRED
 )
 
@@ -71,6 +79,7 @@ endif()
 ################################################################################
 # McCtrl Project
 ################################################################################
+project(mcctrl)
 add_executable(${PROJECT_NAME} main.cpp)
 if(WIN32)
     target_compile_options(${PROJECT_NAME} PRIVATE "/W4")
@@ -78,6 +87,7 @@ else()
     target_compile_options(${PROJECT_NAME} PRIVATE "-Wall" "-pedantic" "-g")
 endif()
 
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_14)
 target_compile_definitions(${PROJECT_NAME} PRIVATE
     -D QT_DEPRECATED_WARNINGS
     -D QT_QML_DEBUG
@@ -86,17 +96,24 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 
 target_sources(${PROJECT_NAME} PRIVATE
     qmlmqttclient.cpp
+    sensordb.cpp
     qml.qrc
 )
 
-target_include_directories(${PROJECT_NAME} PRIVATE mosquitto/lib)
-target_include_directories(${PROJECT_NAME} PRIVATE mosquitto/lib/cpp)
+target_include_directories(${PROJECT_NAME} PRIVATE 
+    mosquitto/lib
+    mosquitto/lib/cpp
+    sqlite_orm/include
+)
 
 # Use paho mqtt cpp and Qt5
 target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt5::Quick
     Qt5::QuickControls2
+    Qt5::Charts
+    Qt5::Widgets
     mosquittopp
+    sqlite
 )
 
 # use rpath for cross compilation
@@ -125,7 +142,7 @@ set_target_properties(mosquittopp PROPERTIES
 
 if(TARGET Qt5::windeployqt)
     # execute windeployqt in a tmp directory after build
-    add_custom_command(TARGET mcctrl
+    add_custom_command(TARGET ${PROJECT_NAME}
         POST_BUILD
         COMMAND set PATH=%PATH%$<SEMICOLON>${qt5_install_prefix}/bin
         COMMAND Qt5::windeployqt --qmldir ${CMAKE_CURRENT_LIST_DIR} "$<TARGET_FILE_DIR:mcctrl>/$<TARGET_FILE_NAME:mcctrl>"

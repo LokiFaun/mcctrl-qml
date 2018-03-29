@@ -1,15 +1,17 @@
 #include "qmlmqttclient.h"
 
+#include <QApplication>
 #include <QDebug>
 #include <QFontDatabase>
-#include <QGuiApplication>
 #include <QQmlApplicationEngine>
-#include <mosquittopp.h>
+
+#include "mosquittopp.h"
+#include "sensordb.h"
 
 int main(int argc, char* argv[])
 {
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-    QGuiApplication app(argc, argv);
+    QApplication app(argc, argv);
 
     mosqpp::lib_init();
 
@@ -18,6 +20,7 @@ int main(int argc, char* argv[])
     }
 
     qmlRegisterType<QmlMqttClient>("MqttClient", 1, 0, "MqttClient");
+    qmlRegisterType<SensorDb>("SensorDb", 1, 0, "SensorDb");
 
     QQmlApplicationEngine engine;
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));

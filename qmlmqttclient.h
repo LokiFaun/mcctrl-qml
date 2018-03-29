@@ -49,6 +49,8 @@ Q_SIGNALS:
     void onLightsOnChanged(bool);
     void onLightBrightnessChanged(int, int);
     void onLightOnChanged(int, bool);
+    void onNewTemperature(double);
+    void onNewPressure(double);
 
 private:
     void shutdown();

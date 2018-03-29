@@ -1,10 +1,11 @@
 #include "qmlmqttclient.h"
 
-#include "mqtt.ip.h"
 #include <QDebug>
 #include <QMutexLocker>
 #include <QString>
 #include <mosquittopp.h>
+
+#include "mqtt.ip.h"
 
 QmlMqttClient::QmlMqttClient(QObject* parent)
     : QThread(parent)
@@ -29,13 +30,12 @@ void QmlMqttClient::connect()
 
 void QmlMqttClient::subscribe(const QString& topic)
 {
-    std::string const tp = topic.toStdString();
+    auto const tp = topic.toStdString();
     mosqpp::mosquittopp::subscribe(nullptr, tp.c_str());
 }
 
 void QmlMqttClient::publish(const QString& topic, const QString& payload)
 {
-    static const int qos = 1;
     qDebug() << "Publishing: " << topic << " - " << payload;
     MqttMessage msg;
     msg.topic = topic;
@@ -115,8 +115,8 @@ void QmlMqttClient::on_disconnect(int rc)
 }
 void QmlMqttClient::on_message(const struct mosquitto_message* message)
 {
-    const QString msg = QString::fromLocal8Bit(static_cast<const char*>(message->payload), message->payloadlen);
-    const QString topic = QString::fromLocal8Bit(message->topic);
+    auto const msg = QString::fromLocal8Bit(static_cast<const char*>(message->payload), message->payloadlen);
+    auto const topic = QString::fromLocal8Bit(message->topic);
 
     qDebug() << "Received TOPIC: " << topic;
     qDebug() << "Received PAYLOAD: " << msg;
@@ -135,6 +135,10 @@ void QmlMqttClient::on_message(const struct mosquitto_message* message)
         emit onLightOnChanged(2, msg == "True");
     } else if (topic == "mcctrl/lights/3/on") {
         emit onLightOnChanged(3, msg == "True");
+    } else if (topic == "mcctrl/temperature") {
+        emit onNewTemperature(msg.toDouble());
+    } else if (topic == "mcctrl/pressure") {
+        emit onNewPressure(msg.toDouble());
     }
 }
 
@@ -168,9 +172,9 @@ void QmlMqttClient::run()
         if (rc) {
             mosqpp::mosquittopp::reconnect();
         } else if (!m_PublishQueue.isEmpty()) {
-            MqttMessage const msg = m_PublishQueue.dequeue();
-            std::string const topic = msg.topic.toStdString();
-            std::string const payload = msg.payload.toStdString();
+            auto const msg = m_PublishQueue.dequeue();
+            auto const topic = msg.topic.toStdString();
+            auto const payload = msg.payload.toStdString();
             mosqpp::mosquittopp::publish(nullptr,
                 topic.c_str(),
                 msg.payload.length(),
