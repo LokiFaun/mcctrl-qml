@@ -40,11 +40,11 @@ def on_message(client, userdata, msg):
         bridge.set_light(3, 'on', True if msg.payload == b'True' else False)
 
     if (msg.topic == 'mcctrl/cmd/lights/1/clr'):
-        bridge.set_light(1, 'xy', json.loads(msg.payload))
+        bridge.set_light(1, 'xy', json.loads(msg.payload.decode('utf-8')))
     if (msg.topic == 'mcctrl/cmd/lights/2/clr'):
-        bridge.set_light(2, 'xy', json.loads(msg.payload))
+        bridge.set_light(2, 'xy', json.loads(msg.payload.decode('utf-8')))
     if (msg.topic == 'mcctrl/cmd/lights/3/clr'):
-        bridge.set_light(3, 'xy', json.loads(msg.payload))
+        bridge.set_light(3, 'xy', json.loads(msg.payload.decode('utf-8')))
 
     publish_lights(client)
 
