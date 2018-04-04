@@ -31,6 +31,8 @@ client.loop_start()
 while True:
     degrees = sensor.read_temperature()
     client.publish("mcctrl/temperature", '{0:0.3f}'.format(degrees), 0, True)
+
     pressure = sensor.read_pressure() / 100
     client.publish("mcctrl/pressure", '{0:0.03f}'.format(pressure), 0, True)
-    time.sleep(30)
+
+    time.sleep(300)

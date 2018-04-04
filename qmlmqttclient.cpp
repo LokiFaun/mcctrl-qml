@@ -25,11 +25,13 @@ QmlMqttClient::~QmlMqttClient()
 
 void QmlMqttClient::connect()
 {
+    qDebug() << "Connecting to " << m_Host;
     mosqpp::mosquittopp::connect(m_Host.toStdString().c_str(), m_Port);
 }
 
 void QmlMqttClient::subscribe(const QString& topic)
 {
+    qDebug() << "Subscribing to " << topic;
     auto const tp = topic.toStdString();
     mosqpp::mosquittopp::subscribe(nullptr, tp.c_str());
 }

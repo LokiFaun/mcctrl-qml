@@ -54,10 +54,6 @@ ApplicationWindow {
         connectionString: "test.sqlite"
     }
 
-    function onMqttConnected(isConnected) {
-        console.log("MQTT connected");
-    }
-
     function onLightsOnChanged(lightsOn) {
         console.log("Lights are: " + lightsOn ? "on!" : "off!");
         mcctrl.lightsOn = lightsOn;
@@ -85,28 +81,34 @@ ApplicationWindow {
         }
     }
 
-    function onNewTemperature(value) {
-        var date = new Date();
-        sensorDb.addTemperature(date.toUTCString(), value);
+    function onNewTemperatureReceived(value) {
+        console.log("Adding temperature value: " + value);
         mcctrl.temperature = value;
+        sensorDb.addTemperature(value);
     }
 
-    function onNewPressure(value) {
-        var date = new Date();
-        sensorDb.addPressure(date.toUTCString(), value);
+    function onNewPressureReceived(value) {
+        console.log("Adding pressure value: " + value);
         mcctrl.pressure = value;
+        sensorDb.addPressure(value);
     }
 
     Component.onCompleted: {
-        client.connect()
-        client.onConnect.connect(onMqttConnected)
-        client.onLightsOnChanged.connect(onLightsOnChanged)
-        client.onLightBrightnessChanged.connect(onLightBrightnessChanged)
-        client.onLightOnChanged.connect(onLightOnChanged)
-        client.onNewTemperature.connect(onNewTemperature);
-        client.onNewPressure.connect(onNewPressure);
+        client.onConnect.connect(function (isConnected) {
+            if (isConnected) {
+                console.log("MQTT connected");
+            } else {
+                console.log("MQTT disconnected");
+            }
+        });
 
-        sensorDb.load();
+        client.onLightsOnChanged.connect(onLightsOnChanged);
+        client.onLightBrightnessChanged.connect(onLightBrightnessChanged);
+        client.onLightOnChanged.connect(onLightOnChanged);
+        client.onNewTemperature.connect(onNewTemperatureReceived);
+        client.onNewPressure.connect(onNewPressureReceived);
+
+        client.connect();
     }
 
     ColorDialog {
@@ -404,12 +406,42 @@ ApplicationWindow {
                 }
             }
             ChartView {
+                id: temperatureChart
                 Layout.fillHeight: true
                 Layout.fillWidth: true
                 Layout.column: 1
                 Layout.row: 0
-                title: qsTr("Temperature")
                 theme: ChartView.ChartThemeDark
+                Component.onCompleted: {
+                    temperatureSeries.pointAdded.connect(function(index) {
+                        console.log("Added temperature point at " + index);
+                    });
+
+                    sensorDb.updateTemperatureChart(temperatureSeries);
+                    var count = temperatureSeries.count;
+                    if (count > 0) {
+                        temperatureDateAxis.min = new Date(temperatureSeries.at(count - 1).x);
+                        temperatureDateAxis.max = new Date(temperatureSeries.at(0).x);
+                        console.log("New min date: " + temperatureDateAxis.min);
+                        console.log("New max date: " + temperatureDateAxis.max);
+                    }
+
+                    temperatureChart.update()
+                }
+
+                LineSeries {
+                    id: temperatureSeries
+                    name: qsTr("Temperature")
+                    color: "red"
+                    axisX: DateTimeAxis {
+                        id: temperatureDateAxis
+                        format: "hh:mm"
+                    }
+                    axisY: ValueAxis {
+                        min: -20
+                        max: 40
+                    }
+                }
             }
             ColumnLayout {
                 Layout.fillHeight: true
@@ -424,12 +456,42 @@ ApplicationWindow {
                 }
             }
             ChartView {
+                id: pressureChart
                 Layout.fillHeight: true
                 Layout.fillWidth: true
                 Layout.column: 1
                 Layout.row: 1
-                title: qsTr("Pressure")
                 theme: ChartView.ChartThemeDark
+                Component.onCompleted: {
+                    pressureSeries.pointAdded.connect(function(index) {
+                        console.log("Added pressure point at " + index);
+                    });
+
+                    sensorDb.updatePressureChart(pressureSeries);
+                    var count = pressureSeries.count;
+                    if (count > 0) {
+                        pressureDateAxis.min = new Date(pressureSeries.at(count - 1).x);
+                        pressureDateAxis.max = new Date(pressureSeries.at(0).x);
+                        console.log("New min date: " + pressureDateAxis.min);
+                        console.log("New max date: " + pressureDateAxis.max);
+                    }
+
+                    temperatureChart.update()
+                }
+
+                LineSeries {
+                    id: pressureSeries
+                    name: qsTr("Pressure")
+                    color: "green"
+                    axisX: DateTimeAxis {
+                        id: pressureDateAxis
+                        format: "hh:mm"
+                    }
+                    axisY: ValueAxis {
+                        min: 800
+                        max: 1100
+                    }
+                }
             }
         }
     }
