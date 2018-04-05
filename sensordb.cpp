@@ -1,8 +1,10 @@
 #include "sensordb.h"
 #include <QAbstractSeries>
 #include <QDateTime>
+#include <QDateTimeAxis>
 #include <QDebug>
 #include <QLineSeries>
+#include <QValueAxis>
 #include <QVector>
 
 #include <sqlite_orm/sqlite_orm.h>
@@ -105,20 +107,20 @@ QVariantList SensorDb::getTemperatureValues() const
     return temperaturePoints;
 }
 
-void SensorDb::updateTemperatureChart(QtCharts::QAbstractSeries* pSeries)
+void SensorDb::updateTemperatureChart(QtCharts::QAbstractSeries* pSeries, QtCharts::QAbstractAxis* pXAxis, QtCharts::QAbstractAxis* pYAxis)
 {
-    updateChart<Temperature>(pSeries, TemperatureTable);
+    updateChart<Temperature>(pSeries, pXAxis, pYAxis, TemperatureTable);
 }
 
-void SensorDb::updatePressureChart(QtCharts::QAbstractSeries* pSeries)
+void SensorDb::updatePressureChart(QtCharts::QAbstractSeries* pSeries, QtCharts::QAbstractAxis* pXAxis, QtCharts::QAbstractAxis* pYAxis)
 {
-    updateChart<Pressure>(pSeries, PressureTable);
+    updateChart<Pressure>(pSeries, pXAxis, pYAxis, PressureTable);
 }
 
 template <typename T>
-void SensorDb::updateChart(QtCharts::QAbstractSeries* pSeries, const std::string& tableName)
+void SensorDb::updateChart(QtCharts::QAbstractSeries* pSeries, QtCharts::QAbstractAxis* pXAxis, QtCharts::QAbstractAxis* pYAxis, const std::string& tableName)
 {
-    if (!pSeries) {
+    if (!pSeries || !pXAxis || !pYAxis) {
         return;
     }
 
@@ -128,18 +130,43 @@ void SensorDb::updateChart(QtCharts::QAbstractSeries* pSeries, const std::string
     }
 
     qDebug() << "Loading " << tableName.c_str() << " values";
-    auto values = storage.get_all<T>(sqlite_orm::order_by(&T::id).desc(), sqlite_orm::limit(10));
-    QList<QPointF> temperaturePoints;
-    for (auto const& value : values) {
-        temperaturePoints.push_back(QPointF(value.time, value.value));
+    auto values = storage.get_all<T, QVector<T>>();
+    if (values.count() > 10) {
+        values = values.mid(values.count() - 10);
     }
 
-    auto* pLineSeries = dynamic_cast<QtCharts::QLineSeries*>(pSeries);
+    QList<QPointF> points;
+    qint64 minDate = std::numeric_limits<qint64>::max();
+    qint64 maxDate = std::numeric_limits<qint64>::min();
+    double minValue = std::numeric_limits<double>::max();
+    double maxValue = std::numeric_limits<double>::min();
+
+    for (auto const& value : values) {
+        points.push_back(QPointF(value.time, value.value));
+        minDate = std::min(minDate, value.time);
+        maxDate = std::max(maxDate, value.time);
+        minValue = std::min(minValue, value.value);
+        maxValue = std::max(maxValue, value.value);
+    }
+
+    auto pLineSeries = dynamic_cast<QtCharts::QLineSeries*>(pSeries);
     if (pLineSeries) {
         if (pLineSeries->points().empty()) {
-            pLineSeries->append(temperaturePoints);
+            pLineSeries->append(points);
         } else {
-            pLineSeries->replace(temperaturePoints);
+            pLineSeries->replace(points);
         }
+    }
+
+    auto pDateAxis = dynamic_cast<QtCharts::QDateTimeAxis*>(pXAxis);
+    if (pDateAxis) {
+        pDateAxis->setMin(QDateTime::fromMSecsSinceEpoch(minDate));
+        pDateAxis->setMax(QDateTime::fromMSecsSinceEpoch(maxDate));
+    }
+
+    auto pValueAxis = dynamic_cast<QtCharts::QValueAxis*>(pYAxis);
+    if (pValueAxis) {
+        pValueAxis->setMin(minValue);
+        pValueAxis->setMax(maxValue);
     }
 }

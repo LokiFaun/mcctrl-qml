@@ -7,6 +7,7 @@
 
 namespace QtCharts {
 class QAbstractSeries;
+class QAbstractAxis;
 }
 
 struct Temperature {
@@ -35,15 +36,15 @@ public:
 
     Q_INVOKABLE QVariantList getTemperatureValues() const;
 
-    Q_INVOKABLE void updateTemperatureChart(QtCharts::QAbstractSeries* pSeries);
-    Q_INVOKABLE void updatePressureChart(QtCharts::QAbstractSeries* pSeries);
+    Q_INVOKABLE void updateTemperatureChart(QtCharts::QAbstractSeries* pSeries, QtCharts::QAbstractAxis* pDateAxis, QtCharts::QAbstractAxis* pValueAxis);
+    Q_INVOKABLE void updatePressureChart(QtCharts::QAbstractSeries* pSeries, QtCharts::QAbstractAxis* pDateAxis, QtCharts::QAbstractAxis* pValueAxis);
 
 Q_SIGNALS:
     void connectionStringChanged(QString const&);
 
 private:
     template <typename T>
-    void updateChart(QtCharts::QAbstractSeries* pSeries, std::string const& tableName);
+    void updateChart(QtCharts::QAbstractSeries* pSeries, QtCharts::QAbstractAxis* pDateAxis, QtCharts::QAbstractAxis* pValueAxisp, std::string const& tableName);
 
     QString m_ConnectionString;
 };

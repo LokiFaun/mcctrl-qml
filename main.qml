@@ -412,21 +412,17 @@ ApplicationWindow {
                 Layout.column: 1
                 Layout.row: 0
                 theme: ChartView.ChartThemeDark
-                Component.onCompleted: {
-                    temperatureSeries.pointAdded.connect(function(index) {
-                        console.log("Added temperature point at " + index);
-                    });
+                antialiasing: true
 
-                    sensorDb.updateTemperatureChart(temperatureSeries);
-                    var count = temperatureSeries.count;
-                    if (count > 0) {
-                        temperatureDateAxis.min = new Date(temperatureSeries.at(count - 1).x);
-                        temperatureDateAxis.max = new Date(temperatureSeries.at(0).x);
-                        console.log("New min date: " + temperatureDateAxis.min);
-                        console.log("New max date: " + temperatureDateAxis.max);
+                Timer {
+                    interval: 600000 // 10min
+                    running: true
+                    repeat: true
+                    triggeredOnStart: true
+                    onTriggered: {
+                        sensorDb.updateTemperatureChart(temperatureSeries, temperatureDateAxis, temperatureValueAxis);
+                        temperatureChart.update()
                     }
-
-                    temperatureChart.update()
                 }
 
                 LineSeries {
@@ -438,6 +434,7 @@ ApplicationWindow {
                         format: "hh:mm"
                     }
                     axisY: ValueAxis {
+                        id: temperatureValueAxis
                         min: -20
                         max: 40
                     }
@@ -462,21 +459,17 @@ ApplicationWindow {
                 Layout.column: 1
                 Layout.row: 1
                 theme: ChartView.ChartThemeDark
-                Component.onCompleted: {
-                    pressureSeries.pointAdded.connect(function(index) {
-                        console.log("Added pressure point at " + index);
-                    });
+                antialiasing: true
 
-                    sensorDb.updatePressureChart(pressureSeries);
-                    var count = pressureSeries.count;
-                    if (count > 0) {
-                        pressureDateAxis.min = new Date(pressureSeries.at(count - 1).x);
-                        pressureDateAxis.max = new Date(pressureSeries.at(0).x);
-                        console.log("New min date: " + pressureDateAxis.min);
-                        console.log("New max date: " + pressureDateAxis.max);
+                Timer {
+                    interval: 600000 // 10min
+                    running: true
+                    repeat: true
+                    triggeredOnStart: true
+                    onTriggered: {
+                        sensorDb.updatePressureChart(pressureSeries, pressureDateAxis, pressureValueAxis);
+                        pressureChart.update()
                     }
-
-                    temperatureChart.update()
                 }
 
                 LineSeries {
@@ -488,6 +481,7 @@ ApplicationWindow {
                         format: "hh:mm"
                     }
                     axisY: ValueAxis {
+                        id: pressureValueAxis
                         min: 800
                         max: 1100
                     }
