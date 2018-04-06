@@ -42,8 +42,6 @@ ApplicationWindow {
     property bool light1_on: false
     property bool light2_on: false
     property bool light3_on: false
-    property double temperature: 0.0
-    property double pressure: 0.0
 
     MqttClient {
         id: client
@@ -55,60 +53,60 @@ ApplicationWindow {
     }
 
     function onLightsOnChanged(lightsOn) {
-        console.log("Lights are: " + lightsOn ? "on!" : "off!");
-        mcctrl.lightsOn = lightsOn;
+        console.log("Lights are: " + lightsOn ? "on!" : "off!")
+        mcctrl.lightsOn = lightsOn
     }
 
     function onLightBrightnessChanged(light, brightness) {
         console.log("light " + light + " has brightness: " + brightness)
         if (light === 1) {
-            mcctrl.light1_bri = brightness;
+            mcctrl.light1_bri = brightness
         } else if (light === 2) {
-            mcctrl.light2_bri = brightness;
+            mcctrl.light2_bri = brightness
         } else if (light === 3) {
-            mcctrl.light3_bri = brightness;
+            mcctrl.light3_bri = brightness
         }
     }
 
     function onLightOnChanged(light, lightOn) {
-        console.log("light " + light + " is " + lightOn ? "on" : "off");
+        console.log("light " + light + " is " + lightOn ? "on" : "off")
         if (light === 1) {
-            mcctrl.light1_on = lightOn;
+            mcctrl.light1_on = lightOn
         } else if (light === 2) {
-            mcctrl.light2_on = lightOn;
+            mcctrl.light2_on = lightOn
         } else if (light === 3) {
-            mcctrl.light3_on = lightOn;
+            mcctrl.light3_on = lightOn
         }
     }
 
     function onNewTemperatureReceived(value) {
-        console.log("Adding temperature value: " + value);
-        mcctrl.temperature = value;
-        sensorDb.addTemperature(value);
+        console.log("Adding temperature value: " + value)
+        mcctrl.temperature = value
+        sensorDb.addTemperature(value)
     }
 
     function onNewPressureReceived(value) {
-        console.log("Adding pressure value: " + value);
-        mcctrl.pressure = value;
-        sensorDb.addPressure(value);
+        console.log("Adding pressure value: " + value)
+        mcctrl.pressure = value
+        sensorDb.addPressure(value)
     }
 
     Component.onCompleted: {
         client.onConnect.connect(function (isConnected) {
             if (isConnected) {
-                console.log("MQTT connected");
+                console.log("MQTT connected")
             } else {
-                console.log("MQTT disconnected");
+                console.log("MQTT disconnected")
             }
-        });
+        })
 
-        client.onLightsOnChanged.connect(onLightsOnChanged);
-        client.onLightBrightnessChanged.connect(onLightBrightnessChanged);
-        client.onLightOnChanged.connect(onLightOnChanged);
-        client.onNewTemperature.connect(onNewTemperatureReceived);
-        client.onNewPressure.connect(onNewPressureReceived);
+        client.onLightsOnChanged.connect(onLightsOnChanged)
+        client.onLightBrightnessChanged.connect(onLightBrightnessChanged)
+        client.onLightOnChanged.connect(onLightOnChanged)
+        client.onNewTemperature.connect(onNewTemperatureReceived)
+        client.onNewPressure.connect(onNewPressureReceived)
 
-        client.connect();
+        client.connect()
     }
 
     ColorDialog {
@@ -117,21 +115,21 @@ ApplicationWindow {
         modality: "ApplicationModal"
         property int light: 0
         function rgb2xy(r, g, b) {
-            r = (r > 0.04045) ? Math.pow((r + 0.055) / (1.0 + 0.055), 2.4) : (r / 12.92);
-            g = (g > 0.04045) ? Math.pow((g + 0.055) / (1.0 + 0.055), 2.4) : (b / 12.92);
-            b = (b > 0.04045) ? Math.pow((b + 0.055) / (1.0 + 0.055), 2.4) : (b / 12.92);
-            var X = r * 0.664511 + g * 0.154324 + b * 0.162028;
-            var Y = r * 0.283881 + g * 0.668433 + b * 0.047685;
-            var Z = r * 0.000088 + g * 0.072310 + b * 0.986039;
+            r = (r > 0.04045) ? Math.pow((r + 0.055) / (1.0 + 0.055), 2.4) : (r / 12.92)
+            g = (g > 0.04045) ? Math.pow((g + 0.055) / (1.0 + 0.055), 2.4) : (b / 12.92)
+            b = (b > 0.04045) ? Math.pow((b + 0.055) / (1.0 + 0.055), 2.4) : (b / 12.92)
+            var X = r * 0.664511 + g * 0.154324 + b * 0.162028
+            var Y = r * 0.283881 + g * 0.668433 + b * 0.047685
+            var Z = r * 0.000088 + g * 0.072310 + b * 0.986039
 
-            var x = X / (X + Y + Z);
-            var y = Y / (X + Y + Z);
-            return [x, y];
+            var x = X / (X + Y + Z)
+            var y = Y / (X + Y + Z)
+            return [x, y]
         }
         onAccepted: {
             if (light != 0) {
-                var xy = rgb2xy(color.r, color.g, color.b);
-                client.publish('mcctrl/cmd/lights/' + light + '/clr', '[' + xy + ']');
+                var xy = rgb2xy(color.r, color.g, color.b)
+                client.publish('mcctrl/cmd/lights/' + light + '/clr', '[' + xy + ']')
             }
         }
     }
@@ -321,7 +319,7 @@ ApplicationWindow {
                     RoundButton {
                         text: qsTr("C")
                         onClicked: {
-                            colorDialog.light = 1;
+                            colorDialog.light = 1
                             colorDialog.visible = true
                         }
                     }
@@ -350,7 +348,7 @@ ApplicationWindow {
                     RoundButton {
                         text: qsTr("C")
                         onClicked: {
-                            colorDialog.light = 2;
+                            colorDialog.light = 2
                             colorDialog.visible = true
                         }
                     }
@@ -379,7 +377,7 @@ ApplicationWindow {
                     RoundButton {
                         text: qsTr("C")
                         onClicked: {
-                            colorDialog.light = 3;
+                            colorDialog.light = 3
                             colorDialog.visible = true
                         }
                     }
@@ -399,9 +397,11 @@ ApplicationWindow {
                 Layout.column: 0
                 Layout.row: 0
                 Label {
+                    id: currentTemperature
                     Layout.alignment: Qt.AlignCenter
                     horizontalAlignment: "AlignHCenter"
-                    text: qsTr("Temperature\n" + mcctrl.temperature + "°C")
+                    property double value: 0.0
+                    text: qsTr("Temperature\n" + currentTemperature.value + "°C")
                     font.pixelSize: 36
                 }
             }
@@ -420,7 +420,8 @@ ApplicationWindow {
                     repeat: true
                     triggeredOnStart: true
                     onTriggered: {
-                        sensorDb.updateTemperatureChart(temperatureSeries, temperatureDateAxis, temperatureValueAxis);
+                        currentTemperature.value = sensorDb.getLastTemperatureValue()
+                        sensorDb.updateTemperatureChart(temperatureSeries, temperatureDateAxis, temperatureValueAxis)
                         temperatureChart.update()
                     }
                 }
@@ -446,9 +447,11 @@ ApplicationWindow {
                 Layout.column: 0
                 Layout.row: 1
                 Label {
+                    id: currentPressure
                     Layout.alignment: Qt.AlignCenter
                     horizontalAlignment: "AlignHCenter"
-                    text: qsTr("Pressure\n" + mcctrl.pressure + "hPa")
+                    property double value: 0.0
+                    text: qsTr("Pressure\n" + currentPressure.value + "hPa")
                     font.pixelSize: 36
                 }
             }
@@ -467,7 +470,8 @@ ApplicationWindow {
                     repeat: true
                     triggeredOnStart: true
                     onTriggered: {
-                        sensorDb.updatePressureChart(pressureSeries, pressureDateAxis, pressureValueAxis);
+                        currentPressure.value = sensorDb.getLastPressureValue()
+                        sensorDb.updatePressureChart(pressureSeries, pressureDateAxis, pressureValueAxis)
                         pressureChart.update()
                     }
                 }

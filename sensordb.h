@@ -22,6 +22,9 @@ struct Pressure {
     double value;
 };
 
+Q_DECLARE_METATYPE(Temperature)
+Q_DECLARE_METATYPE(Pressure)
+
 class SensorDb : public QObject {
     Q_OBJECT
     Q_PROPERTY(QString connectionString MEMBER m_ConnectionString NOTIFY connectionStringChanged)
@@ -35,6 +38,8 @@ public:
     Q_INVOKABLE void addPressure(double value);
 
     Q_INVOKABLE QVariantList getTemperatureValues() const;
+    Q_INVOKABLE double getLastTemperatureValue() const;
+    Q_INVOKABLE double getLastPressureValue() const;
 
     Q_INVOKABLE void updateTemperatureChart(QtCharts::QAbstractSeries* pSeries, QtCharts::QAbstractAxis* pDateAxis, QtCharts::QAbstractAxis* pValueAxis);
     Q_INVOKABLE void updatePressureChart(QtCharts::QAbstractSeries* pSeries, QtCharts::QAbstractAxis* pDateAxis, QtCharts::QAbstractAxis* pValueAxis);
@@ -44,7 +49,10 @@ Q_SIGNALS:
 
 private:
     template <typename T>
-    void updateChart(QtCharts::QAbstractSeries* pSeries, QtCharts::QAbstractAxis* pDateAxis, QtCharts::QAbstractAxis* pValueAxisp, std::string const& tableName);
+    QVariant getLastValue(std::string const& tableName) const;
+
+    template <typename T>
+    void updateChart(QtCharts::QAbstractSeries* pSeries, QtCharts::QAbstractAxis* pDateAxis, QtCharts::QAbstractAxis* pValueAxisp, std::string const& tableName) const;
 
     QString m_ConnectionString;
 };

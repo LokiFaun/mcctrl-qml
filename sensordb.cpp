@@ -7,10 +7,15 @@
 #include <QValueAxis>
 #include <QVector>
 
-#include <sqlite_orm/sqlite_orm.h>
-
 static std::string const TemperatureTable = "Temperature";
 static std::string const PressureTable = "Pressure";
+
+#if _MSC_VER
+// disable warnings for sqlite_orm
+#pragma warning(push, 0)
+#endif
+
+#include <sqlite_orm/sqlite_orm.h>
 
 auto initStorage(QString const& connectionString)
 {
@@ -36,6 +41,10 @@ auto initStorage(QString const& connectionString)
     storage.sync_schema();
     return storage;
 }
+
+#if _MSC_VER
+#pragma warning(pop)
+#endif
 
 SensorDb::SensorDb(QObject* parent)
     : QObject(parent)
@@ -107,6 +116,26 @@ QVariantList SensorDb::getTemperatureValues() const
     return temperaturePoints;
 }
 
+double SensorDb::getLastTemperatureValue() const
+{
+    QVariant value = getLastValue<Temperature>(TemperatureTable);
+    if (value.isValid()) {
+        return value.value<Temperature>().value;
+    }
+
+    return 0.0;
+}
+
+double SensorDb::getLastPressureValue() const
+{
+    QVariant value = getLastValue<Pressure>(PressureTable);
+    if (value.isValid()) {
+        return value.value<Pressure>().value;
+    }
+
+    return 0.0;
+}
+
 void SensorDb::updateTemperatureChart(QtCharts::QAbstractSeries* pSeries, QtCharts::QAbstractAxis* pXAxis, QtCharts::QAbstractAxis* pYAxis)
 {
     updateChart<Temperature>(pSeries, pXAxis, pYAxis, TemperatureTable);
@@ -118,7 +147,7 @@ void SensorDb::updatePressureChart(QtCharts::QAbstractSeries* pSeries, QtCharts:
 }
 
 template <typename T>
-void SensorDb::updateChart(QtCharts::QAbstractSeries* pSeries, QtCharts::QAbstractAxis* pXAxis, QtCharts::QAbstractAxis* pYAxis, const std::string& tableName)
+void SensorDb::updateChart(QtCharts::QAbstractSeries* pSeries, QtCharts::QAbstractAxis* pXAxis, QtCharts::QAbstractAxis* pYAxis, const std::string& tableName) const
 {
     if (!pSeries || !pXAxis || !pYAxis) {
         return;
@@ -169,4 +198,21 @@ void SensorDb::updateChart(QtCharts::QAbstractSeries* pSeries, QtCharts::QAbstra
         pValueAxis->setMin(minValue);
         pValueAxis->setMax(maxValue);
     }
+}
+
+template <typename T>
+QVariant SensorDb::getLastValue(std::string const& tableName) const
+{
+    auto storage = initStorage(m_ConnectionString);
+    if (!storage.table_exists(tableName)) {
+        return QVariant();
+    }
+
+    qDebug() << "Loading latest " << tableName.c_str() << " value";
+    auto values = storage.get_all<T, QVector<T>>(sqlite_orm::order_by(&T::id).desc(), sqlite_orm::limit(1));
+    if (values.empty()) {
+        return QVariant();
+    }
+
+    return QVariant::fromValue(*values.rbegin());
 }
