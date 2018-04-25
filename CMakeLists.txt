@@ -27,7 +27,7 @@ elseif(UNIX)
 endif()
 
 ################################################################################
-# QLite
+# SQLite
 ################################################################################
 project(sqlite)
 add_library(${PROJECT_NAME} STATIC sqlite/sqlite3.c)
@@ -38,6 +38,42 @@ elseif(UNIX)
     target_link_libraries(${PROJECT_NAME} PUBLIC pthread dl)
     target_compile_options(${PROJECT_NAME} PRIVATE "-w")
 endif()
+
+################################################################################
+# TagLib
+################################################################################
+add_subdirectory(taglib)
+target_compile_definitions(tag PUBLIC TAGLIB_STATIC)
+# make sure include directories are set for dependent targets
+target_include_directories(tag PUBLIC
+    taglib/taglib/toolkit
+    taglib/taglib/asf
+    taglib/taglib/mpeg
+    taglib/taglib/ogg
+    taglib/taglib/ogg/flac
+    taglib/taglib/flac
+    taglib/taglib/mpc
+    taglib/taglib/mp4
+    taglib/taglib/ogg/vorbis
+    taglib/taglib/ogg/speex
+    taglib/taglib/ogg/opus
+    taglib/taglib/mpeg/id3v2
+    taglib/taglib/mpeg/id3v2/frames
+    taglib/taglib/mpeg/id3v1
+    taglib/taglib/ape
+    taglib/taglib/wavpack
+    taglib/taglib/trueaudio
+    taglib/taglib/riff
+    taglib/taglib/riff/aiff
+    taglib/taglib/riff/wav
+    taglib/taglib/mod
+    taglib/taglib/s3m
+    taglib/taglib/it
+    taglib/taglib/xm
+    taglib/3rdparty
+    taglib
+    ${CMAKE_BINARY_DIR}/taglib
+)
 
 ################################################################################
 # Qt
@@ -105,10 +141,11 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 target_sources(${PROJECT_NAME} PRIVATE
     qmlmqttclient.cpp
     sensordb.cpp
+    audioformatter.cpp
     qml.qrc
 )
 
-target_include_directories(${PROJECT_NAME} PRIVATE 
+target_include_directories(${PROJECT_NAME} PRIVATE
     mosquitto/lib
     mosquitto/lib/cpp
     sqlite_orm/include
@@ -122,6 +159,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt5::Widgets
     mosquittopp
     sqlite
+    tag
 )
 
 # use rpath for cross compilation

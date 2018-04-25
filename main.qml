@@ -10,8 +10,7 @@ import QtCharts 2.2
 import QtMultimedia 5.9
 import Qt.labs.platform 1.0
 import Qt.labs.folderlistmodel 2.2
-import MqttClient 1.0
-import SensorDb 1.0
+import mcctrl 1.0
 
 ApplicationWindow {
     id: mcctrl
@@ -603,7 +602,7 @@ ApplicationWindow {
                     contentHeight: 18
                     Text {
                         anchors.fill: parent
-                        text: source
+                        text: AudioFormatter.format(source, "%artist - %title")
                     }
                 }
             }

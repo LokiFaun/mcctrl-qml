@@ -9,8 +9,14 @@
 #include <QQmlContext>
 #include <QStandardPaths>
 
+#include "audioformatter.h"
 #include "mosquittopp.h"
 #include "sensordb.h"
+
+static QObject* qmlAudioFormatterProvider(QQmlEngine*, QJSEngine*)
+{
+    return new AudioFormatter();
+}
 
 int main(int argc, char* argv[])
 {
@@ -23,8 +29,9 @@ int main(int argc, char* argv[])
         qWarning() << "Could not load font";
     }
 
-    qmlRegisterType<QmlMqttClient>("MqttClient", 1, 0, "MqttClient");
-    qmlRegisterType<SensorDb>("SensorDb", 1, 0, "SensorDb");
+    qmlRegisterType<QmlMqttClient>("mcctrl", 1, 0, "MqttClient");
+    qmlRegisterType<SensorDb>("mcctrl", 1, 0, "SensorDb");
+    qmlRegisterSingletonType<AudioFormatter>("mcctrl", 1, 0, "AudioFormatter", qmlAudioFormatterProvider);
 
     QQmlApplicationEngine engine;
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
