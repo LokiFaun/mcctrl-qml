@@ -129,9 +129,9 @@ if (NOT WIN32)
     add_library(${PROJECT_NAME}_rpath INTERFACE)
     target_link_libraries(${PROJECT_NAME}_rpath INTERFACE
         "-Wl,-rpath,\$ORIGIN/../../../lib"
-        "-Wl,-rpath-link,/home/schuetz/raspberry_pi/sysroot/opt/vc/lib"
-        "-Wl,-rpath-link,/home/schuetz/raspberry_pi/sysroot/lib/arm-linux-gnueabihf"
-        "-Wl,-rpath-link,/home/schuetz/raspberry_pi/sysroot/usr/lib/arm-linux-gnueabihf"
+        "-Wl,-rpath-link,~/raspberry_pi/sysroot/opt/vc/lib"
+        "-Wl,-rpath-link,~/raspberry_pi/sysroot/lib/arm-linux-gnueabihf"
+        "-Wl,-rpath-link,~/raspberry_pi/sysroot/usr/lib/arm-linux-gnueabihf"
     )
     target_link_libraries(${PROJECT_NAME} PRIVATE
         ${PROJECT_NAME}_rpath

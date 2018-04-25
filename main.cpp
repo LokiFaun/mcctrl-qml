@@ -2,8 +2,12 @@
 
 #include <QApplication>
 #include <QDebug>
+#include <QDirModel>
+#include <QFileSystemModel>
 #include <QFontDatabase>
 #include <QQmlApplicationEngine>
+#include <QQmlContext>
+#include <QStandardPaths>
 
 #include "mosquittopp.h"
 #include "sensordb.h"
@@ -24,6 +28,7 @@ int main(int argc, char* argv[])
 
     QQmlApplicationEngine engine;
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
+
     int rc = -1;
     if (!engine.rootObjects().isEmpty()) {
         rc = app.exec();

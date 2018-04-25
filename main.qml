@@ -1,4 +1,5 @@
 import QtQuick 2.10
+import QtQuick.Controls 1.4
 import QtQuick.Controls 2.3
 import QtQuick.Controls.Material 2.3
 import QtQuick.Controls.Universal 2.2
@@ -6,6 +7,9 @@ import QtQuick.Layouts 1.3
 import QtQuick.Extras 1.4
 import QtQuick.Dialogs 1.2
 import QtCharts 2.2
+import QtMultimedia 5.9
+import Qt.labs.platform 1.0
+import Qt.labs.folderlistmodel 2.2
 import MqttClient 1.0
 import SensorDb 1.0
 
@@ -25,13 +29,19 @@ ApplicationWindow {
 
     Item {
         id: fontello
-        readonly property string menu: "\uf0c9"
         readonly property string close: "\ue800"
         readonly property string home: "\ue801"
+        readonly property string back: "\ue802"
+        readonly property string headphones: "\ue803"
+        readonly property string play: "\ue804"
+        readonly property string stop: "\ue805"
+        readonly property string pause: "\ue806"
+        readonly property string next: "\ue807"
+        readonly property string previous: "\ue808"
         readonly property string lightbulb: "\uf0eb"
+        readonly property string menu: "\uf0c9"
         readonly property string desktop: "\uf108"
         readonly property string thermometer: "\uf2c8"
-        readonly property string back: "\ue802"
     }
 
 
@@ -50,6 +60,19 @@ ApplicationWindow {
     SensorDb {
         id: sensorDb
         connectionString: "test.sqlite"
+    }
+
+    Audio {
+        id: musicPlayer
+        property string folder: StandardPaths.standardLocations(StandardPaths.MusicLocation)[0]
+        playlist: Playlist {
+            id: musicList
+        }
+        onStatusChanged: {
+            if (status == Audio.EndOfMedia) {
+                musicList.next()
+            }
+        }
     }
 
     function onLightsOnChanged(lightsOn) {
@@ -156,7 +179,12 @@ ApplicationWindow {
                 }
             }
             Label {
-                text: qsTr("McCtrl")
+                text: if (musicPlayer.playbackState === Audio.PlayingState) {
+                          qsTr("McCtrl - ") + musicPlayer.metaData.albumArtist + ": " + musicPlayer.metaData.title
+                      } else {
+                          qsTr("McCtrl")
+                      }
+
                 elide: Label.ElideRight
                 horizontalAlignment: Qt.AlignLeft
                 verticalAlignment: Qt.AlignVCenter
@@ -218,9 +246,19 @@ ApplicationWindow {
                 }
             }
             Button {
-                id: systemMenuButton
+                id: mediaMenuButton
                 Layout.preferredWidth: 200
                 anchors.top: sensorMenuButton.bottom
+                text: fontello.headphones + qsTr(" Media")
+                onClicked: {
+                    mainStack.push(mediaPlayer)
+                    toolbarDrawer.close()
+                }
+            }
+            Button {
+                id: systemMenuButton
+                Layout.preferredWidth: 200
+                anchors.top: mediaMenuButton.bottom
                 text: fontello.desktop + qsTr(" System")
                 onClicked: {
                     mainStack.push(system)
@@ -490,6 +528,120 @@ ApplicationWindow {
                         max: 1100
                     }
                 }
+            }
+        }
+    }
+
+    Component {
+        id: mediaPlayer
+        GridLayout {
+            rows: 2
+            columns: 3
+            ListView {
+                id: folderView
+                Layout.row: 0
+                Layout.column: 0
+                Layout.fillHeight: true
+                Layout.fillWidth: true
+                model: FolderListModel {
+                    id: musicFolders
+                    showDirs: true
+                    showDotAndDotDot: true
+                    showOnlyReadable: true
+                    showHidden: false
+                    showFiles: false
+                    folder: musicPlayer.folder
+                    rootFolder: musicPlayer.folder
+                }
+                delegate: Button {
+                    width: folderView.width
+                    text: fileName
+                    onClicked: {
+                        musicFiles.folder = fileURL
+                        musicFolders.folder = fileURL
+                    }
+                }
+            }
+            ListView {
+                Layout.row: 0
+                Layout.column: 1
+                Layout.fillHeight: true
+                Layout.fillWidth: true
+                model: FolderListModel {
+                    id: musicFiles
+                    nameFilters: ["*.mp3"]
+                    showDirs: false
+                    showDotAndDotDot: false
+                    showOnlyReadable: true
+                    showHidden: false
+                    showFiles: true
+                    rootFolder: musicPlayer.folder
+                }
+                delegate: Button {
+                    width: folderView.width
+                    text: fileName
+                    onClicked: {
+                        musicList.addItem(fileURL)
+                        if (musicPlayer.playbackState !== Audio.PlayingState) {
+                            musicPlayer.play()
+                        }
+                    }
+                }
+            }
+            ListView {
+                id: musicListView
+                Layout.row: 0
+                Layout.column: 2
+                Layout.fillHeight: true
+                Layout.fillWidth: true
+                spacing: 1
+                model: musicList
+                header: Text { text: "Playlist" }
+                delegate: Pane {
+                    width: musicListView.width
+                    Material.elevation: 3
+                    contentHeight: 18
+                    Text {
+                        anchors.fill: parent
+                        text: source
+                    }
+                }
+            }
+            Button {
+                Layout.row: 1
+                Layout.column: 0
+                Layout.fillWidth: true
+                height: 18
+                text: fontello.previous
+                onClicked: musicPlayer.playlist.previous()
+            }
+            Button {
+                Layout.row: 1
+                Layout.column: 1
+                Layout.fillWidth: true
+                height: 18
+                text: {
+                    if (musicPlayer.playbackState === Audio.PlayingState) {
+                        return fontello.pause
+                    } else {
+                        return fontello.play
+                    }
+                }
+                onClicked: {
+                    if (musicPlayer.playbackState !== Audio.PlayingState) {
+                        musicPlayer.play()
+                    } else {
+                        musicPlayer.pause()
+                    }
+                }
+            }
+            Button {
+                Layout.row: 1
+                Layout.column: 2
+                Layout.fillWidth: true
+                height: 18
+                text: fontello.next
+                onClicked: musicPlayer.playlist.next()
             }
         }
     }

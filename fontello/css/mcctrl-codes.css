@@ -2,6 +2,12 @@
 .icon-cancel-circled2:before { content: '\e800'; } /* '' */
 .icon-home-1:before { content: '\e801'; } /* '' */
 .icon-back:before { content: '\e802'; } /* '' */
+.icon-headphones:before { content: '\e803'; } /* '' */
+.icon-play:before { content: '\e804'; } /* '' */
+.icon-stop:before { content: '\e805'; } /* '' */
+.icon-pause:before { content: '\e806'; } /* '' */
+.icon-to-end:before { content: '\e807'; } /* '' */
+.icon-to-start:before { content: '\e808'; } /* '' */
 .icon-menu:before { content: '\f0c9'; } /* '' */
 .icon-lightbulb:before { content: '\f0eb'; } /* '' */
 .icon-desktop:before { content: '\f108'; } /* '' */
