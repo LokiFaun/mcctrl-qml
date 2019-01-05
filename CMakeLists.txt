@@ -20,11 +20,15 @@ set(WITH_LIB_ONLY ON STRING "Build only lib")
 add_subdirectory(mosquitto)
 if(WIN32)
     target_compile_options(libmosquitto PRIVATE "/W0")
+    target_compile_definitions(libmosquitto PRIVATE -D WIN32)
     target_compile_options(mosquittopp PRIVATE "/W0")
+    target_compile_definitions(mosquittopp PRIVATE -D WIN32)
 elseif(UNIX)
     target_compile_options(libmosquitto PRIVATE "-w")
     target_compile_options(mosquittopp PRIVATE "-w")
 endif()
+
+set_target_properties(mosquitto mosquitto_sub mosquitto_pub PROPERTIES EXCLUDE_FROM_ALL TRUE EXCLUDE_FROM_DEFAULT_BUILD TRUE)
 
 ################################################################################
 # SQLite
@@ -89,6 +93,8 @@ if(WIN32)
 else()
     set (CMAKE_PREFIX_PATH "~/raspberry_pi/qt5pi")
 endif()
+
+message(STATUS "Using CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}")
 
 find_package(Qt5 COMPONENTS
     Core

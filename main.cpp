@@ -13,11 +13,6 @@
 #include "mosquittopp.h"
 #include "sensordb.h"
 
-static QObject* qmlAudioFormatterProvider(QQmlEngine*, QJSEngine*)
-{
-    return new AudioFormatter();
-}
-
 int main(int argc, char* argv[])
 {
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
@@ -31,14 +26,14 @@ int main(int argc, char* argv[])
 
     qmlRegisterType<QmlMqttClient>("mcctrl", 1, 0, "MqttClient");
     qmlRegisterType<SensorDb>("mcctrl", 1, 0, "SensorDb");
-    qmlRegisterSingletonType<AudioFormatter>("mcctrl", 1, 0, "AudioFormatter", qmlAudioFormatterProvider);
+    qmlRegisterSingletonType<AudioFormatter>("mcctrl", 1, 0, "AudioFormatter", [](QQmlEngine*, QJSEngine*) -> QObject* {return new AudioFormatter(); });
 
     QQmlApplicationEngine engine;
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
 
     int rc = -1;
     if (!engine.rootObjects().isEmpty()) {
-        rc = app.exec();
+        rc = QApplication::exec();
     }
 
     mosqpp::lib_cleanup();
