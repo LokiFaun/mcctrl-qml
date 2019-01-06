@@ -24,7 +24,7 @@
         "rsyncCommandArgs": "-t --delete --delete-excluded",
         "remoteCopyBuildOutput": false,
         "cmakeCommandArgs": "",
-        "buildCommandArgs": "",
+        "buildCommandArgs": "-j 8",
         "ctestCommandArgs": "",
         "inheritEnvironments": [
             "linux_x64"

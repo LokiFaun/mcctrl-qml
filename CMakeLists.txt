@@ -74,6 +74,7 @@ target_include_directories(tag PUBLIC
     taglib/taglib/s3m
     taglib/taglib/it
     taglib/taglib/xm
+    taglib/taglib
     taglib/3rdparty
     taglib
     ${CMAKE_BINARY_DIR}/taglib
@@ -164,12 +165,13 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt5::Charts
     Qt5::Widgets
     mosquittopp
-    sqlite
     tag
+    sqlite
 )
 
 # use rpath for cross compilation
 if (NOT WIN32)
+    message(STATUS "using -rpath linking for cross compilation")
     add_library(${PROJECT_NAME}_rpath INTERFACE)
     target_link_libraries(${PROJECT_NAME}_rpath INTERFACE
         "-Wl,-rpath,\$ORIGIN/../../../lib"
